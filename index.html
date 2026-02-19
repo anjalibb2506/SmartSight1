@@ -29,6 +29,7 @@ body {
   min-height: 100vh;
 }
 
+/* SIDEBAR */
 .sidebar {
   width: 240px;
   flex-shrink: 0;
@@ -60,6 +61,7 @@ body {
   text-transform: uppercase;
 }
 
+/* overall progress in sidebar */
 .sidebar-progress {
   padding: 14px 20px;
   border-bottom: 1px solid var(--border);
@@ -87,12 +89,14 @@ body {
 .nav-item.done .nav-dot { background: var(--accent); }
 .nav-item.done { color: #444; }
 
+/* MAIN */
 .main {
   margin-left: 240px;
   flex: 1;
   min-width: 0;
 }
 
+/* TOP BAR */
 .topbar {
   background: var(--surface);
   border-bottom: 1px solid var(--border);
@@ -119,6 +123,7 @@ body {
 .chip-purple { color: var(--purple); border-color: rgba(176,110,251,0.25); background: rgba(176,110,251,0.05); }
 .topbar-right { margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); white-space: nowrap; }
 
+/* HERO */
 .hero {
   padding: 48px 36px 36px;
   border-bottom: 1px solid var(--border);
@@ -163,6 +168,7 @@ body {
 }
 .hero-tag .dot { width: 6px; height: 6px; border-radius: 50%; }
 
+/* CONTENT */
 .content { padding: 36px; }
 .phase-section { margin-bottom: 56px; scroll-margin-top: 80px; }
 .phase-header {
@@ -247,6 +253,7 @@ body {
 .step-body li { font-size: 13px; color: #aaa; padding-left: 18px; position: relative; line-height: 1.5; }
 .step-body li::before { content: '›'; position: absolute; left: 3px; color: var(--accent); font-size: 16px; line-height: 1.15; }
 
+/* CODE */
 pre {
   background: var(--code-bg);
   border: 1px solid #1e1e1e;
@@ -267,6 +274,7 @@ pre {
 .nu { color: #fab387; }   /* number */
 .cl { color: #f9e2af; }   /* class */
 
+/* TIP / INFO BOX */
 .tip {
   background: rgba(0,255,136,0.04);
   border: 1px solid rgba(0,255,136,0.15);
@@ -292,6 +300,7 @@ pre {
 }
 .warn strong { color: var(--accent3); }
 
+/* FILE TREE */
 .tree {
   background: var(--code-bg);
   border: 1px solid #1e1e1e;
@@ -307,6 +316,7 @@ pre {
 .tree .file { color: #a6e3a1; }
 .tree .note { color: #585b70; }
 
+/* ARCH DIAGRAM */
 .arch {
   display: flex;
   flex-wrap: wrap;
@@ -327,6 +337,7 @@ pre {
 .arch-box .ab-sub { color: var(--muted); font-size: 10px; margin-top: 1px; font-family: 'IBM Plex Mono', monospace; }
 .arch-arrow { color: var(--accent); font-size: 18px; }
 
+/* PHASE COLOR ACCENTS */
 .p1 .phase-number { color: #4ec9b0; border-color: rgba(78,201,176,0.25); }
 .p2 .phase-number { color: var(--accent); border-color: rgba(0,255,136,0.25); }
 .p3 .phase-number { color: var(--accent2); border-color: rgba(0,191,255,0.25); }
@@ -334,6 +345,7 @@ pre {
 .p5 .phase-number { color: var(--purple); border-color: rgba(176,110,251,0.25); }
 .p6 .phase-number { color: #f9e2af; border-color: rgba(249,226,175,0.25); }
 
+/* RESPONSIVE */
 @media (max-width: 768px) {
   .sidebar { display: none; }
   .main { margin-left: 0; }
@@ -346,6 +358,7 @@ pre {
 </head>
 <body>
 
+<!-- SIDEBAR -->
 <nav class="sidebar">
   <div class="sidebar-logo">
     <div class="logo-badge">SmartSight</div>
@@ -366,8 +379,10 @@ pre {
   <div class="nav-item" onclick="scrollTo('p7')" id="nav-p7"><span class="nav-dot"></span>07 · Integration & Testing</div>
 </nav>
 
+<!-- MAIN -->
 <div class="main">
 
+  <!-- TOP BAR -->
   <div class="topbar">
     <div class="topbar-chips">
       <span class="chip chip-green">📷 Webcam</span>
@@ -380,6 +395,7 @@ pre {
     <div class="topbar-right">Python 3.10+ · YOLOv8 · Flask</div>
   </div>
 
+  <!-- HERO -->
   <div class="hero">
     <div class="hero-eyebrow">Pure Software Implementation</div>
     <h1>SmartSight<br><em>AI Navigation Assistant</em></h1>
@@ -394,8 +410,10 @@ pre {
     </div>
   </div>
 
+  <!-- CONTENT -->
   <div class="content">
 
+    <!-- ARCHITECTURE -->
     <div style="margin-bottom:40px;">
       <p style="font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">System Architecture</p>
       <div class="arch">
@@ -415,6 +433,7 @@ pre {
       </div>
     </div>
 
+    <!-- PHASE 1 -->
     <div class="phase-section p1" id="p1">
       <div class="phase-header">
         <div class="phase-number">PHASE 01</div>
@@ -504,6 +523,7 @@ model = YOLO(<span class="st">'yolov8n.pt'</span>)   <span class="cm"># download
 
     </div>
 
+    <!-- PHASE 2 -->
     <div class="phase-section p2" id="p2">
       <div class="phase-header">
         <div class="phase-number">PHASE 02</div>
@@ -593,6 +613,7 @@ DASHBOARD_HOST = <span class="st">"0.0.0.0"</span>    <span class="cm"># 0.0.0.0
 
     </div>
 
+    <!-- PHASE 3 -->
     <div class="phase-section p3" id="p3">
       <div class="phase-header">
         <div class="phase-number">PHASE 03</div>
@@ -713,6 +734,7 @@ COLOURS = {
 
     </div>
 
+    <!-- PHASE 4 -->
     <div class="phase-section p4" id="p4">
       <div class="phase-header">
         <div class="phase-number">PHASE 04</div>
@@ -796,6 +818,7 @@ COLOURS = {
 
     </div>
 
+    <!-- PHASE 5 -->
     <div class="phase-section p5" id="p5">
       <div class="phase-header">
         <div class="phase-number">PHASE 05</div>
@@ -873,6 +896,7 @@ _last_spoken = {}
 
     </div>
 
+    <!-- PHASE 6 -->
     <div class="phase-section p6" id="p6">
       <div class="phase-header">
         <div class="phase-number">PHASE 06</div>
@@ -984,6 +1008,7 @@ _latest_detections = []
 
     </div>
 
+    <!-- PHASE 7 -->
     <div class="phase-section p6" id="p7">
       <div class="phase-header">
         <div class="phase-number">PHASE 07</div>
@@ -1122,14 +1147,16 @@ _latest_detections = []
 
     </div>
 
-  </div>
-</div>
+  </div><!-- /content -->
+</div><!-- /main -->
 
 <script>
+  // ── State ──────────────────────────────────────────
   const TOTAL = 16;
   const stored = JSON.parse(localStorage.getItem('ss2_checks') || '[]');
   const checked = new Set(stored);
 
+  // ── Init ──────────────────────────────────────────
   function init() {
     checked.forEach(id => {
       const cb = document.querySelector(`#${id} .step-checkbox`);
@@ -1139,6 +1166,7 @@ _latest_detections = []
     document.getElementById('spTotal').textContent = TOTAL + ' steps';
   }
 
+  // ── Check a step ──────────────────────────────────
   function check(e, id) {
     e.stopPropagation();
     const cb = document.querySelector(`#${id} .step-checkbox`);
@@ -1148,10 +1176,12 @@ _latest_detections = []
     updateProgress();
   }
 
+  // ── Toggle step open/close ────────────────────────
   function toggle(id) {
     document.getElementById(id).classList.toggle('open');
   }
 
+  // ── Scroll to phase ───────────────────────────────
   function scrollTo(id) {
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1159,6 +1189,7 @@ _latest_detections = []
     document.getElementById('nav-' + id)?.classList.add('active');
   }
 
+  // ── Update progress bar ───────────────────────────
   function updateProgress() {
     const done = checked.size;
     const pct = Math.round(done / TOTAL * 100);
@@ -1166,6 +1197,7 @@ _latest_detections = []
     document.getElementById('spDone').textContent = done + ' done /';
   }
 
+  // ── Highlight active nav on scroll ───────────────
   const phases = ['p1','p2','p3','p4','p5','p6','p7'];
   window.addEventListener('scroll', () => {
     let current = 'p1';
