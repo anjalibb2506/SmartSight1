@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartSight · Software Implementation Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d0d0d;
+  --surface: #141414;
+  --surface2: #1c1c1c;
+  --border: #2a2a2a;
+  --accent: #00ff88;
+  --accent2: #00bfff;
+  --accent3: #ff6b35;
+  --purple: #b06efb;
+  --text: #e8e8e8;
+  --muted: #666;
+  --code-bg: #0a0a0a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Sora', sans-serif;
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  overflow-y: auto;
+  z-index: 100;
+  scrollbar-width: thin;
+  scrollbar-color: #2a2a2a transparent;
+}
+.sidebar-logo {
+  padding: 24px 20px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-logo .logo-badge {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: -0.5px;
+}
+.sidebar-logo .logo-sub {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 3px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.sidebar-progress {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.sp-label { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+.sp-track { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.sp-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 2px; transition: width 0.4s; }
+.sp-nums { display: flex; justify-content: space-between; margin-top: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); }
+.sp-nums span:first-child { color: var(--accent); }
+
+.nav-section { padding: 16px 20px 8px; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 20px;
+  cursor: pointer;
+  transition: all 0.15s;
+  border-left: 2px solid transparent;
+  font-size: 12px;
+  color: var(--muted);
+}
+.nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+.nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(0,255,136,0.05); }
+.nav-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); flex-shrink: 0; transition: background 0.2s; }
+.nav-item.active .nav-dot { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+.nav-item.done .nav-dot { background: var(--accent); }
+.nav-item.done { color: #444; }
+
+.main {
+  margin-left: 240px;
+  flex: 1;
+  min-width: 0;
+}
+
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 36px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.topbar-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid;
+  letter-spacing: 0.5px;
+}
+.chip-green { color: var(--accent); border-color: rgba(0,255,136,0.25); background: rgba(0,255,136,0.05); }
+.chip-blue { color: var(--accent2); border-color: rgba(0,191,255,0.25); background: rgba(0,191,255,0.05); }
+.chip-orange { color: var(--accent3); border-color: rgba(255,107,53,0.25); background: rgba(255,107,53,0.05); }
+.chip-purple { color: var(--purple); border-color: rgba(176,110,251,0.25); background: rgba(176,110,251,0.05); }
+.topbar-right { margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); white-space: nowrap; }
+
+.hero {
+  padding: 48px 36px 36px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, #0d0d0d 0%, #101820 100%);
+  position: relative;
+  overflow: hidden;
+}
+.hero::after {
+  content: '';
+  position: absolute;
+  right: -60px; top: -60px;
+  width: 320px; height: 320px;
+  background: radial-gradient(circle, rgba(0,255,136,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.hero h1 {
+  font-size: clamp(26px, 4vw, 44px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -1.5px;
+  margin-bottom: 14px;
+}
+.hero h1 em { font-style: normal; color: var(--accent); }
+.hero-desc { color: var(--muted); font-size: 14px; max-width: 580px; line-height: 1.7; }
+.hero-tags { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+.hero-tag {
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  display: flex; align-items: center; gap: 6px;
+}
+.hero-tag .dot { width: 6px; height: 6px; border-radius: 50%; }
+
+.content { padding: 36px; }
+.phase-section { margin-bottom: 56px; scroll-margin-top: 80px; }
+.phase-header {
+  display: flex; align-items: flex-start; gap: 18px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+.phase-number {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 6px 12px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.phase-info h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+.phase-info p { color: var(--muted); font-size: 13px; margin-top: 4px; }
+.phase-meta { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+
+/* STEP CARDS */
+.step { 
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.step:hover { border-color: #3a3a3a; }
+.step.open { border-color: #3a3a3a; }
+.step-head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 18px;
+  cursor: pointer;
+  user-select: none;
+}
+.step-checkbox {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: transparent;
+}
+.step-checkbox:hover { border-color: var(--accent); }
+.step-checkbox.checked { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 700; }
+.step-id { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); flex-shrink: 0; width: 28px; }
+.step-title-text { font-size: 14px; font-weight: 600; flex: 1; }
+.step-badge {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  padding: 3px 9px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  letter-spacing: 0.5px;
+  border: 1px solid;
+}
+.b-py { color: #4ec9b0; border-color: rgba(78,201,176,0.3); background: rgba(78,201,176,0.07); }
+.b-ai { color: var(--accent); border-color: rgba(0,255,136,0.3); background: rgba(0,255,136,0.07); }
+.b-web { color: var(--accent2); border-color: rgba(0,191,255,0.3); background: rgba(0,191,255,0.07); }
+.b-mobile { color: var(--purple); border-color: rgba(176,110,251,0.3); background: rgba(176,110,251,0.07); }
+.b-audio { color: var(--accent3); border-color: rgba(255,107,53,0.3); background: rgba(255,107,53,0.07); }
+.b-test { color: #f9e2af; border-color: rgba(249,226,175,0.3); background: rgba(249,226,175,0.07); }
+.chevron { color: var(--muted); font-size: 11px; transition: transform 0.2s; flex-shrink: 0; }
+.step.open .chevron { transform: rotate(180deg); }
+
+.step-body {
+  display: none;
+  padding: 0 18px 20px 62px;
+  border-top: 1px solid var(--border);
+}
+.step.open .step-body { display: block; }
+.step-body > p { font-size: 13px; color: #aaa; line-height: 1.7; margin-top: 14px; }
+.step-body ul { margin-top: 12px; list-style: none; display: flex; flex-direction: column; gap: 7px; }
+.step-body li { font-size: 13px; color: #aaa; padding-left: 18px; position: relative; line-height: 1.5; }
+.step-body li::before { content: '›'; position: absolute; left: 3px; color: var(--accent); font-size: 16px; line-height: 1.15; }
+
+pre {
+  background: var(--code-bg);
+  border: 1px solid #1e1e1e;
+  border-radius: 8px;
+  padding: 16px 18px;
+  margin-top: 14px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  line-height: 1.65;
+  overflow-x: auto;
+  color: #cdd6f4;
+  white-space: pre;
+}
+.cm { color: #585b70; }   /* comment */
+.kw { color: #cba6f7; }   /* keyword */
+.fn { color: #89b4fa; }   /* function */
+.st { color: #a6e3a1; }   /* string */
+.nu { color: #fab387; }   /* number */
+.cl { color: #f9e2af; }   /* class */
+
+.tip {
+  background: rgba(0,255,136,0.04);
+  border: 1px solid rgba(0,255,136,0.15);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 16px;
+  margin-top: 14px;
+  font-size: 12.5px;
+  color: #aaa;
+  line-height: 1.6;
+}
+.tip strong { color: var(--accent); }
+.warn {
+  background: rgba(255,107,53,0.04);
+  border: 1px solid rgba(255,107,53,0.15);
+  border-left: 3px solid var(--accent3);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 16px;
+  margin-top: 14px;
+  font-size: 12.5px;
+  color: #aaa;
+  line-height: 1.6;
+}
+.warn strong { color: var(--accent3); }
+
+.tree {
+  background: var(--code-bg);
+  border: 1px solid #1e1e1e;
+  border-radius: 8px;
+  padding: 16px 18px;
+  margin-top: 14px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  line-height: 2;
+  color: #cdd6f4;
+}
+.tree .dir { color: #89b4fa; }
+.tree .file { color: #a6e3a1; }
+.tree .note { color: #585b70; }
+
+.arch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+.arch-box {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 12px;
+  text-align: center;
+}
+.arch-box .ab-icon { font-size: 20px; }
+.arch-box .ab-name { font-weight: 600; margin-top: 3px; font-size: 11px; }
+.arch-box .ab-sub { color: var(--muted); font-size: 10px; margin-top: 1px; font-family: 'IBM Plex Mono', monospace; }
+.arch-arrow { color: var(--accent); font-size: 18px; }
+
+.p1 .phase-number { color: #4ec9b0; border-color: rgba(78,201,176,0.25); }
+.p2 .phase-number { color: var(--accent); border-color: rgba(0,255,136,0.25); }
+.p3 .phase-number { color: var(--accent2); border-color: rgba(0,191,255,0.25); }
+.p4 .phase-number { color: var(--accent3); border-color: rgba(255,107,53,0.25); }
+.p5 .phase-number { color: var(--purple); border-color: rgba(176,110,251,0.25); }
+.p6 .phase-number { color: #f9e2af; border-color: rgba(249,226,175,0.25); }
+
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .main { margin-left: 0; }
+  .content { padding: 20px; }
+  .topbar { padding: 12px 20px; }
+  .hero { padding: 32px 20px; }
+  .step-body { padding-left: 18px; }
+}
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-badge">SmartSight</div>
+    <div class="logo-sub">Software Build Guide</div>
+  </div>
+  <div class="sidebar-progress">
+    <div class="sp-label">Overall Progress</div>
+    <div class="sp-track"><div class="sp-fill" id="spFill" style="width:0%"></div></div>
+    <div class="sp-nums"><span id="spDone">0</span><span id="spTotal">0</span></div>
+  </div>
+  <div class="nav-section">Phases</div>
+  <div class="nav-item active" onclick="scrollTo('p1')" id="nav-p1"><span class="nav-dot"></span>01 · Environment Setup</div>
+  <div class="nav-item" onclick="scrollTo('p2')" id="nav-p2"><span class="nav-dot"></span>02 · Project Structure</div>
+  <div class="nav-item" onclick="scrollTo('p3')" id="nav-p3"><span class="nav-dot"></span>03 · AI Detection Core</div>
+  <div class="nav-item" onclick="scrollTo('p4')" id="nav-p4"><span class="nav-dot"></span>04 · Input Sources</div>
+  <div class="nav-item" onclick="scrollTo('p5')" id="nav-p5"><span class="nav-dot"></span>05 · Feedback System</div>
+  <div class="nav-item" onclick="scrollTo('p6')" id="nav-p6"><span class="nav-dot"></span>06 · Web Dashboard</div>
+  <div class="nav-item" onclick="scrollTo('p7')" id="nav-p7"><span class="nav-dot"></span>07 · Integration & Testing</div>
+</nav>
+
+<div class="main">
+
+  <div class="topbar">
+    <div class="topbar-chips">
+      <span class="chip chip-green">📷 Webcam</span>
+      <span class="chip chip-green">🎬 Video Files</span>
+      <span class="chip chip-purple">📱 Mobile Camera</span>
+      <span class="chip chip-blue">🖥 Bounding Boxes</span>
+      <span class="chip chip-orange">🔊 TTS Audio</span>
+      <span class="chip chip-blue">🌐 Web Dashboard</span>
+    </div>
+    <div class="topbar-right">Python 3.10+ · YOLOv8 · Flask</div>
+  </div>
+
+  <div class="hero">
+    <div class="hero-eyebrow">Pure Software Implementation</div>
+    <h1>SmartSight<br><em>AI Navigation Assistant</em></h1>
+    <p class="hero-desc">Build a full obstacle detection system that runs on your laptop — no hardware needed. Supports webcam, video files, and mobile camera as input. Outputs bounding boxes, TTS alerts, terminal logs, and a live web dashboard.</p>
+    <div class="hero-tags">
+      <span class="hero-tag"><span class="dot" style="background:#4ec9b0"></span>Python + OpenCV</span>
+      <span class="hero-tag"><span class="dot" style="background:#00ff88"></span>YOLOv8 (Ultralytics)</span>
+      <span class="hero-tag"><span class="dot" style="background:#00bfff"></span>Flask + Socket.IO</span>
+      <span class="hero-tag"><span class="dot" style="background:#b06efb"></span>IP Webcam (Mobile)</span>
+      <span class="hero-tag"><span class="dot" style="background:#ff6b35"></span>pyttsx3 TTS</span>
+      <span class="hero-tag"><span class="dot" style="background:#f9e2af"></span>~4–6 Weeks</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <div style="margin-bottom:40px;">
+      <p style="font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">System Architecture</p>
+      <div class="arch">
+        <div class="arch-box"><div class="ab-icon">📷</div><div class="ab-name">Input Layer</div><div class="ab-sub">Webcam / Video / Mobile</div></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box"><div class="ab-icon">🧠</div><div class="ab-name">AI Detection</div><div class="ab-sub">YOLOv8n</div></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box"><div class="ab-icon">⚖️</div><div class="ab-name">Threat Engine</div><div class="ab-sub">Priority + Distance</div></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box"><div class="ab-icon">📤</div><div class="ab-name">Output Layer</div><div class="ab-sub">4 simultaneous outputs</div></div>
+      </div>
+      <div class="arch" style="margin-top:10px;padding-left:48%;">
+        <div class="arch-box" style="font-size:11px;"><div class="ab-sub">🖥 OpenCV window + boxes</div></div>
+        <div class="arch-box" style="font-size:11px;"><div class="ab-sub">🔊 TTS speech alerts</div></div>
+        <div class="arch-box" style="font-size:11px;"><div class="ab-sub">📋 Terminal logs</div></div>
+        <div class="arch-box" style="font-size:11px;"><div class="ab-sub">🌐 Flask dashboard</div></div>
+      </div>
+    </div>
+
+    <div class="phase-section p1" id="p1">
+      <div class="phase-header">
+        <div class="phase-number">PHASE 01</div>
+        <div class="phase-info">
+          <h2>Environment Setup</h2>
+          <p>Install Python, create a virtual environment, and install all dependencies · Week 1</p>
+          <div class="phase-meta">
+            <span class="chip chip-green">Python 3.10+</span>
+            <span class="chip chip-blue">pip packages</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="step" id="s1">
+        <div class="step-head" onclick="toggle('s1')">
+          <div class="step-checkbox" onclick="check(event,'s1')">✓</div>
+          <span class="step-id">1.1</span>
+          <span class="step-title-text">Install Python 3.10+ and verify</span>
+          <span class="step-badge b-py">PYTHON</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="step-body">
+          <p>Download Python from python.org (3.10 or 3.11 recommended for best YOLOv8 compatibility). Verify it installed correctly.</p>
+<pre><span class="cm"># Check Python version — must be 3.10 or higher</span>
+python --version
+
+<span class="cm"># If you get "python not found", try:</span>
+python3 --version</pre>
+          <div class="tip"><strong>Windows users:</strong> Check "Add Python to PATH" during installation. Restart your terminal after installing.</div>
+        </div>
+      </div>
+
+      <div class="step" id="s2">
+        <div class="step-head" onclick="toggle('s2')">
+          <div class="step-checkbox" onclick="check(event,'s2')">✓</div>
+          <span class="step-id">1.2</span>
+          <span class="step-title-text">Create virtual environment and install all packages</span>
+          <span class="step-badge b-py">PYTHON</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="step-body">
+          <p>Always work in a virtual environment to avoid conflicts between projects.</p>
+<pre><span class="cm"># Create the project folder and virtual environment</span>
+mkdir smartsight
+cd smartsight
+python -m venv venv
+
+<span class="cm"># Activate it</span>
+<span class="cm"># Windows:</span>
+venv\Scripts\activate
+<span class="cm"># Mac / Linux:</span>
+source venv/bin/activate
+
+<span class="cm"># Install all required packages</span>
+pip install ultralytics          <span class="cm"># YOLOv8 (includes OpenCV)</span>
+pip install flask flask-socketio <span class="cm"># Web dashboard</span>
+pip install pyttsx3              <span class="cm"># Offline TTS (no internet needed)</span>
+pip install requests             <span class="cm"># For mobile camera IP stream</span>
+pip install pillow               <span class="cm"># Image utilities</span>
+pip install eventlet             <span class="cm"># Async for Flask-SocketIO</span>
+
+<span class="cm"># Save your dependencies</span>
+pip freeze > requirements.txt</pre>
+          <div class="tip"><strong>Note:</strong> <code>ultralytics</code> automatically installs OpenCV, torch, numpy, and other dependencies — one package handles all of it.</div>
+        </div>
+      </div>
+
+      <div class="step" id="s3">
+        <div class="step-head" onclick="toggle('s3')">
+          <div class="step-checkbox" onclick="check(event,'s3')">✓</div>
+          <span class="step-id">1.3</span>
+          <span class="step-title-text">Download YOLOv8 nano model weights</span>
+          <span class="step-badge b-ai">AI MODEL</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="step-body">
+          <p>YOLOv8n (nano) is the fastest and smallest model — perfect for real-time use on a laptop CPU. It will auto-download on first use, or you can pre-download it.</p>
+<pre><span class="cm"># Auto-download + quick test (run this in Python shell)</span>
+<span class="kw">from</span> ultralytics <span class="kw">import</span> YOLO
+
+model = YOLO(<span class="st">'yolov8n.pt'</span>)   <span class="cm"># downloads ~6MB automatically</span>
+<span class="fn">print</span>(<span class="st">"Model loaded! Classes:"</span>, <span class="fn">len</span>(model.names))
+<span class="cm"># Should print: Model loaded! Classes: 80</span></pre>
+          <div class="tip"><strong>The 80 built-in classes include:</strong> person, bicycle, car, motorcycle, bus, truck, chair, couch, dining table, stairs (via 'escalator' proxy), and more — sufficient for obstacle detection without any custom training.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="phase-section p2" id="p2">
+      <div class="phase-header">
+        <div class="phase-number">PHASE 02</div>
+        <div class="phase-info">
+          <h2>Project Folder Structure</h2>
+          <p>Organise your codebase cleanly before writing logic · Week 1</p>
+        </div>
+      </div>
+
+      <div class="step" id="s4">
+        <div class="step-head" onclick="toggle('s4')">
+          <div class="step-checkbox" onclick="check(event,'s4')">✓</div>
+          <span class="step-id">2.1</span>
+          <span class="step-title-text">Create the full project structure</span>
+          <span class="step-badge b-py">STRUCTURE</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="step-body">
+          <p>Create the following files and folders inside your <code>smartsight/</code> directory. Each file has a single, clear responsibility.</p>
+          <div class="tree">
+<span class="dir">smartsight/</span>
+├── <span class="file">main.py</span>           <span class="note"># Entry point — ties everything together</span>
+├── <span class="file">config.py</span>         <span class="note"># All settings: thresholds, paths, TTS on/off</span>
+├── <span class="file">detector.py</span>       <span class="note"># YOLOv8 obstacle detection logic</span>
+├── <span class="file">input_source.py</span>   <span class="note"># Webcam / video / mobile camera loader</span>
+├── <span class="file">threat_engine.py</span>  <span class="note"># Classify threat level from detections</span>
+├── <span class="file">feedback.py</span>       <span class="note"># TTS audio + terminal logging</span>
+├── <span class="file">dashboard/</span>
+│   ├── <span class="file">app.py</span>          <span class="note"># Flask web server + Socket.IO</span>
+│   └── <span class="dir">templates/</span>
+│       └── <span class="file">index.html</span>  <span class="note"># Live dashboard UI</span>
+├── <span class="dir">models/</span>
+│   └── <span class="file">yolov8n.pt</span>    <span class="note"># AI weights (auto-downloaded)</span>
+├── <span class="dir">test_videos/</span>       <span class="note"># Put your .mp4 test files here</span>
+└── <span class="file">requirements.txt</span>  <span class="note"># pip freeze output</span>
+          </div>
+<pre><span class="cm"># Create all folders and blank files at once</span>
+mkdir dashboard dashboard/templates models test_videos
+touch main.py config.py detector.py input_source.py
+touch threat_engine.py feedback.py
+touch dashboard/app.py dashboard/templates/index.html</pre>
+        </div>
+      </div>
+
+      <div class="step" id="s5">
+        <div class="step-head" onclick="toggle('s5')">
+          <div class="step-checkbox" onclick="check(event,'s5')">✓</div>
+          <span class="step-id">2.2</span>
+          <span class="step-title-text">Write config.py — all settings in one place</span>
+          <span class="step-badge b-py">PYTHON</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="step-body">
+          <p>Centralise all tunable settings here so you never hunt through multiple files to change a threshold.</p>
+<pre><span class="cm"># config.py</span>
+
+<span class="cm"># ── Input ──────────────────────────────────────</span>
+INPUT_MODE     = <span class="st">"webcam"</span>      <span class="cm"># "webcam" | "video" | "mobile"</span>
+VIDEO_PATH     = <span class="st">"test_videos/sample.mp4"</span>
+MOBILE_IP      = <span class="st">"http://192.168.x.x:8080/video"</span>  <span class="cm"># IP Webcam app URL</span>
+WEBCAM_INDEX   = <span class="nu">0</span>             <span class="cm"># 0 = default laptop camera</span>
+FRAME_WIDTH    = <span class="nu">640</span>
+FRAME_HEIGHT   = <span class="nu">480</span>
+
+<span class="cm"># ── AI Model ───────────────────────────────────</span>
+MODEL_PATH     = <span class="st">"models/yolov8n.pt"</span>
+CONFIDENCE     = <span class="nu">0.45</span>          <span class="cm"># Min detection confidence (0–1)</span>
+
+<span class="cm"># ── Priority obstacle classes ─────────────────</span>
+HIGH_PRIORITY  = [<span class="st">"person"</span>, <span class="st">"car"</span>, <span class="st">"truck"</span>, <span class="st">"motorcycle"</span>, <span class="st">"bicycle"</span>]
+MED_PRIORITY   = [<span class="st">"chair"</span>, <span class="st">"dining table"</span>, <span class="st">"bench"</span>, <span class="st">"couch"</span>]
+
+<span class="cm"># ── Threat thresholds (% of frame area) ───────</span>
+DANGER_AREA    = <span class="nu">0.20</span>          <span class="cm"># Object fills >20% of screen → DANGER</span>
+WARNING_AREA   = <span class="nu">0.07</span>          <span class="cm"># Object fills >7% of screen → WARNING</span>
+
+<span class="cm"># ── Feedback ───────────────────────────────────</span>
+TTS_ENABLED    = <span class="cl">True</span>
+ALERT_COOLDOWN = <span class="nu">2.5</span>           <span class="cm"># Seconds between repeated alerts</span>
+LOG_TO_TERMINAL= <span class="cl">True</span>
+
+<span class="cm"># ── Dashboard ──────────────────────────────────</span>
+DASHBOARD_PORT = <span class="nu">5000</span>
+DASHBOARD_HOST = <span class="st">"0.0.0.0"</span>    <span class="cm"># 0.0.0.0 = accessible on local network</span></pre>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="phase-section p3" id="p3">
+      <div class="phase-header">
+        <div class="phase-number">PHASE 03</div>
+        <div class="phase-info">
+          <h2>AI Detection Core</h2>
+          <p>YOLOv8 detection + bounding box drawing + threat classification · Week 2</p>
+          <div class="phase-meta">
+            <span class="chip chip-green">YOLOv8</span>
+            <span class="chip chip-blue">OpenCV</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="step" id="s6">
+        <div class="step-head" onclick="toggle('s6')">
+          <div class="step-checkbox" onclick="check(event,'s6')">✓</div>
+          <span class="step-id">3.1</span>
+          <span class="step-title-text">Write detector.py — run YOLOv8 on each frame</span>
+          <span class="step-badge b-ai">AI</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="step-body">
+<pre><span class="cm"># detector.py</span>
+<span class="kw">from</span> ultralytics <span class="kw">import</span> YOLO
+<span class="kw">import</span> config
+
+<span class="cl">class</span> <span class="fn">ObstacleDetector</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        self.model = YOLO(config.MODEL_PATH)
+        <span class="fn">print</span>(<span class="st">"[SmartSight] AI model loaded ✓"</span>)
+
+    <span class="kw">def</span> <span class="fn">detect</span>(self, frame):
+        <span class="st">"""Run detection on a frame. Returns list of detections."""</span>
+        h, w = frame.shape[:<span class="nu">2</span>]
+        frame_area = h * w
+
+        results = self.model(
+            frame,
+            conf=config.CONFIDENCE,
+            verbose=<span class="cl">False</span>
+        )[<span class="nu">0</span>]
+
+        detections = []
+        <span class="kw">for</span> box <span class="kw">in</span> results.boxes:
+            x1, y1, x2, y2 = <span class="fn">map</span>(<span class="fn">int</span>, box.xyxy[<span class="nu">0</span>])
+            label   = self.model.names[<span class="fn">int</span>(box.cls)]
+            conf    = <span class="fn">float</span>(box.conf)
+            obj_area = (x2 - x1) * (y2 - y1)
+            area_ratio = obj_area / frame_area
+
+            detections.append({
+                <span class="st">'label'</span>: label,
+                <span class="st">'confidence'</span>: conf,
+                <span class="st">'bbox'</span>: (x1, y1, x2, y2),
+                <span class="st">'area_ratio'</span>: area_ratio,
+                <span class="st">'center_x'</span>: (x1 + x2) // <span class="nu">2</span>,
+                <span class="st">'center_y'</span>: (y1 + y2) // <span class="nu">2</span>,
+            })
+        <span class="kw">return</span> detections</pre>
+        </div>
+      </div>
+
+      <div class="step" id="s7">
+        <div class="step-head" onclick="toggle('s7')">
+          <div class="step-checkbox" onclick="check(event,'s7')">✓</div>
+          <span class="step-id">3.2</span>
+          <span class="step-title-text">Write threat_engine.py — classify danger level + draw boxes</span>
+          <span class="step-badge b-ai">AI</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="step-body">
+          <p>Threat level is estimated by how large the object is in the frame (proxy for distance) and its class priority. Bounding boxes are colour-coded: 🔴 danger, 🟡 warning, 🟢 safe.</p>
+<pre><span class="cm"># threat_engine.py</span>
+<span class="kw">import</span> cv2, config
+
+COLOURS = {
+    <span class="st">'danger'</span>:  (<span class="nu">0</span>,   <span class="nu">0</span>,   <span class="nu">255</span>),  <span class="cm"># Red</span>
+    <span class="st">'warning'</span>: (<span class="nu">0</span>,   <span class="nu">165</span>, <span class="nu">255</span>),  <span class="cm"># Orange</span>
+    <span class="st">'safe'</span>:    (<span class="nu">0</span>,   <span class="nu">200</span>, <span class="nu">80</span> ),  <span class="cm"># Green</span>
+}
+
+<span class="kw">def</span> <span class="fn">assess</span>(detections):
+    <span class="st">"""Add 'threat' key to each detection."""</span>
+    <span class="kw">for</span> d <span class="kw">in</span> detections:
+        level = <span class="st">'safe'</span>
+        <span class="kw">if</span> d[<span class="st">'area_ratio'</span>] > config.DANGER_AREA:
+            level = <span class="st">'danger'</span>
+        <span class="kw">elif</span> d[<span class="st">'area_ratio'</span>] > config.WARNING_AREA:
+            level = <span class="st">'warning'</span>
+        <span class="cm"># Upgrade priority objects one level</span>
+        <span class="kw">if</span> d[<span class="st">'label'</span>] <span class="kw">in</span> config.HIGH_PRIORITY:
+            <span class="kw">if</span> level == <span class="st">'safe'</span>: level = <span class="st">'warning'</span>
+        d[<span class="st">'threat'</span>] = level
+    <span class="cm"># Sort: danger first</span>
+    order = {<span class="st">'danger'</span>:<span class="nu">0</span>, <span class="st">'warning'</span>:<span class="nu">1</span>, <span class="st">'safe'</span>:<span class="nu">2</span>}
+    <span class="kw">return</span> <span class="fn">sorted</span>(detections, key=<span class="kw">lambda</span> x: order[x[<span class="st">'threat'</span>]])
+
+<span class="kw">def</span> <span class="fn">draw_boxes</span>(frame, detections):
+    <span class="st">"""Draw colour-coded bounding boxes on the frame."""</span>
+    h, w = frame.shape[:<span class="nu">2</span>]
+    <span class="kw">for</span> d <span class="kw">in</span> detections:
+        x1, y1, x2, y2 = d[<span class="st">'bbox'</span>]
+        colour = COLOURS[d[<span class="st">'threat'</span>]]
+        cv2.<span class="fn">rectangle</span>(frame, (x1, y1), (x2, y2), colour, <span class="nu">2</span>)
+        label_str = <span class="fn">f</span><span class="st">"{d['label']} [{d['threat'].upper()}] {d['confidence']:.0%}"</span>
+        <span class="cm"># Background rectangle for text</span>
+        (tw, th), _ = cv2.<span class="fn">getTextSize</span>(label_str, cv2.FONT_HERSHEY_SIMPLEX, <span class="nu">0.5</span>, <span class="nu">1</span>)
+        cv2.<span class="fn">rectangle</span>(frame, (x1, y1-th-<span class="nu">6</span>), (x1+tw+<span class="nu">4</span>, y1), colour, -<span class="nu">1</span>)
+        cv2.<span class="fn">putText</span>(frame, label_str, (x1+<span class="nu">2</span>, y1-<span class="nu">4</span>),
+                    cv2.FONT_HERSHEY_SIMPLEX, <span class="nu">0.5</span>, (<span class="nu">255</span>,<span class="nu">255</span>,<span class="nu">255</span>), <span class="nu">1</span>)
+    <span class="cm"># HUD overlay</span>
+    danger_count = <span class="fn">sum</span>(<span class="nu">1</span> <span class="kw">for</span> d <span class="kw">in</span> detections <span class="kw">if</span> d[<span class="st">'threat'</span>]==<span class="st">'danger'</span>)
+    hud = <span class="fn">f</span><span class="st">"SmartSight | Objects: {len(detections)} | DANGER: {danger_count}"</span>
+    cv2.<span class="fn">putText</span>(frame, hud, (<span class="nu">10</span>, <span class="nu">22</span>), cv2.FONT_HERSHEY_SIMPLEX, <span class="nu">0.55</span>, (<span class="nu">0</span>,<span class="nu">255</span>,<span class="nu">136</span>), <span class="nu">2</span>)
+    <span class="kw">return</span> frame</pre>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="phase-section p4" id="p4">
+      <div class="phase-header">
+        <div class="phase-number">PHASE 04</div>
+        <div class="phase-info">
+          <h2>Input Sources Module</h2>
+          <p>One module handles webcam, video files, and mobile camera · Week 2–3</p>
+          <div class="phase-meta">
+            <span class="chip chip-green">Webcam</span>
+            <span class="chip chip-green">Video</span>
+            <span class="chip chip-purple">Mobile (IP Webcam)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="step" id="s8">
+        <div class="step-head" onclick="toggle('s8')">
+          <div class="step-checkbox" onclick="check(event,'s8')">✓</div>
+          <span class="step-id">4.1</span>
+          <span class="step-title-text">Write input_source.py — unified source handler</span>
+          <span class="step-badge b-py">PYTHON</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="step-body">
+          <p>This module returns a consistent OpenCV VideoCapture object regardless of whether the source is a webcam, video file, or mobile IP stream.</p>
+<pre><span class="cm"># input_source.py</span>
+<span class="kw">import</span> cv2, config
+
+<span class="kw">def</span> <span class="fn">get_source</span>():
+    <span class="st">"""Returns an OpenCV VideoCapture for the configured input mode."""</span>
+    mode = config.INPUT_MODE.lower()
+
+    <span class="kw">if</span> mode == <span class="st">"webcam"</span>:
+        cap = cv2.<span class="fn">VideoCapture</span>(config.WEBCAM_INDEX)
+        <span class="fn">print</span>(<span class="st">f"[Input] Using laptop webcam (index {config.WEBCAM_INDEX})"</span>)
+
+    <span class="kw">elif</span> mode == <span class="st">"video"</span>:
+        cap = cv2.<span class="fn">VideoCapture</span>(config.VIDEO_PATH)
+        <span class="fn">print</span>(<span class="st">f"[Input] Loading video: {config.VIDEO_PATH}"</span>)
+
+    <span class="kw">elif</span> mode == <span class="st">"mobile"</span>:
+        <span class="cm"># Requires "IP Webcam" app (Android) or "iVCam" (iOS)</span>
+        <span class="cm"># Open the app, note the IP address shown, paste in config.py</span>
+        cap = cv2.<span class="fn">VideoCapture</span>(config.MOBILE_IP)
+        <span class="fn">print</span>(<span class="st">f"[Input] Connecting to mobile: {config.MOBILE_IP}"</span>)
+
+    <span class="kw">else</span>:
+        <span class="kw">raise</span> <span class="cl">ValueError</span>(<span class="st">f"Unknown INPUT_MODE: {mode}"</span>)
+
+    cap.<span class="fn">set</span>(cv2.CAP_PROP_FRAME_WIDTH, config.FRAME_WIDTH)
+    cap.<span class="fn">set</span>(cv2.CAP_PROP_FRAME_HEIGHT, config.FRAME_HEIGHT)
+
+    <span class="kw">if not</span> cap.<span class="fn">isOpened</span>():
+        <span class="kw">raise</span> <span class="cl">IOError</span>(<span class="st">f"Cannot open source: {mode}"</span>)
+
+    <span class="kw">return</span> cap</pre>
+        </div>
+      </div>
+
+      <div class="step" id="s9">
+        <div class="step-head" onclick="toggle('s9')">
+          <div class="step-checkbox" onclick="check(event,'s9')">✓</div>
+          <span class="step-id">4.2</span>
+          <span class="step-title-text">Set up mobile camera using IP Webcam app</span>
+          <span class="step-badge b-mobile">MOBILE</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="step-body">
+          <p>Your phone becomes a wireless camera — no cables needed. Both your phone and laptop must be on the same WiFi network.</p>
+          <ul>
+            <li><strong>Android:</strong> Install "IP Webcam" (by Pavel Khlebovich) from Play Store</li>
+            <li><strong>iOS:</strong> Install "iVCam" or "EpocCam" from App Store</li>
+            <li>Open the app → tap "Start Server" at the bottom</li>
+            <li>Note the IP address shown, e.g. <code>http://192.168.1.12:8080</code></li>
+            <li>Paste into <code>config.py</code> as: <code>MOBILE_IP = "http://192.168.1.12:8080/video"</code></li>
+            <li>Set <code>INPUT_MODE = "mobile"</code> in config.py</li>
+          </ul>
+          <div class="tip"><strong>Test it:</strong> Open the IP address in your laptop's browser — you should see the phone's live camera feed before running any Python code.</div>
+          <div class="warn"><strong>Same WiFi required:</strong> Your laptop and phone must be connected to the exact same WiFi network. Mobile data will not work for this.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="phase-section p5" id="p5">
+      <div class="phase-header">
+        <div class="phase-number">PHASE 05</div>
+        <div class="phase-info">
+          <h2>Feedback System</h2>
+          <p>TTS audio alerts + terminal logging with cooldown logic · Week 3</p>
+          <div class="phase-meta">
+            <span class="chip chip-orange">TTS Audio</span>
+            <span class="chip chip-blue">Terminal Log</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="step" id="s10">
+        <div class="step-head" onclick="toggle('s10')">
+          <div class="step-checkbox" onclick="check(event,'s10')">✓</div>
+          <span class="step-id">5.1</span>
+          <span class="step-title-text">Write feedback.py — TTS + smart cooldown + terminal logs</span>
+          <span class="step-badge b-audio">AUDIO</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="step-body">
+          <p>Uses threading so audio never blocks the video loop. Smart cooldown prevents the same alert repeating every frame.</p>
+<pre><span class="cm"># feedback.py</span>
+<span class="kw">import</span> pyttsx3, time, threading, config
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime
+
+<span class="cm"># ── TTS Engine (runs offline, no internet needed) ──</span>
+_engine = pyttsx3.<span class="fn">init</span>()
+_engine.<span class="fn">setProperty</span>(<span class="st">'rate'</span>, <span class="nu">165</span>)    <span class="cm"># Speaking speed</span>
+_engine.<span class="fn">setProperty</span>(<span class="st">'volume'</span>, <span class="nu">1.0</span>)
+
+<span class="cm"># ── Cooldown tracker per object label ─────────────</span>
+_last_spoken = {}
+
+<span class="kw">def</span> <span class="fn">_speak_thread</span>(text):
+    _engine.<span class="fn">say</span>(text)
+    _engine.<span class="fn">runAndWait</span>()
+
+<span class="kw">def</span> <span class="fn">alert</span>(detections):
+    <span class="st">"""Process detections and trigger audio + terminal output."""</span>
+    now = time.<span class="fn">time</span>()
+    <span class="kw">for</span> d <span class="kw">in</span> detections:
+        <span class="kw">if</span> d[<span class="st">'threat'</span>] == <span class="st">'safe'</span>:
+            <span class="kw">continue</span>
+
+        label = d[<span class="st">'label'</span>]
+        threat = d[<span class="st">'threat'</span>]
+
+        <span class="cm"># Skip if we alerted for this label recently</span>
+        <span class="kw">if</span> now - _last_spoken.<span class="fn">get</span>(label, <span class="nu">0</span>) < config.ALERT_COOLDOWN:
+            <span class="kw">continue</span>
+        _last_spoken[label] = now
+
+        <span class="cm"># ── Build the speech text ──────────────────────</span>
+        <span class="kw">if</span> threat == <span class="st">'danger'</span>:
+            speech = <span class="st">f"Danger! {label} very close. Stop."</span>
+        <span class="kw">else</span>:
+            speech = <span class="st">f"{label} ahead. Proceed with caution."</span>
+
+        <span class="cm"># ── Terminal log ────────────────────────────────</span>
+        <span class="kw">if</span> config.LOG_TO_TERMINAL:
+            ts = datetime.<span class="fn">now</span>().<span class="fn">strftime</span>(<span class="st">"%H:%M:%S"</span>)
+            icon = <span class="st">"🔴"</span> <span class="kw">if</span> threat == <span class="st">'danger'</span> <span class="kw">else</span> <span class="st">"🟡"</span>
+            <span class="fn">print</span>(<span class="st">f"[{ts}] {icon} {threat.upper():8} | {label:15} | area: {d['area_ratio']:.1%} | conf: {d['confidence']:.0%}"</span>)
+
+        <span class="cm"># ── Speak in background thread ─────────────────</span>
+        <span class="kw">if</span> config.TTS_ENABLED:
+            t = threading.<span class="cl">Thread</span>(target=_speak_thread, args=(speech,), daemon=<span class="cl">True</span>)
+            t.<span class="fn">start</span>()
+        <span class="kw">break</span>  <span class="cm"># Only alert for the highest-threat object per frame</span></pre>
+          <div class="tip"><strong>pyttsx3 works fully offline</strong> and supports multiple voices. You can list available voices with: <code>for v in engine.getProperty('voices'): print(v.name)</code></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="phase-section p6" id="p6">
+      <div class="phase-header">
+        <div class="phase-number">PHASE 06</div>
+        <div class="phase-info">
+          <h2>Live Web Dashboard</h2>
+          <p>Flask + Socket.IO streams live detections to a browser UI · Week 3–4</p>
+          <div class="phase-meta">
+            <span class="chip chip-blue">Flask</span>
+            <span class="chip chip-blue">Socket.IO</span>
+            <span class="chip chip-blue">Live UI</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="step" id="s11">
+        <div class="step-head" onclick="toggle('s11')">
+          <div class="step-checkbox" onclick="check(event,'s11')">✓</div>
+          <span class="step-id">6.1</span>
+          <span class="step-title-text">Write dashboard/app.py — Flask server with Socket.IO</span>
+          <span class="step-badge b-web">FLASK</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="step-body">
+<pre><span class="cm"># dashboard/app.py</span>
+<span class="kw">from</span> flask <span class="kw">import</span> Flask, render_template, Response
+<span class="kw">from</span> flask_socketio <span class="kw">import</span> SocketIO
+<span class="kw">import</span> base64, cv2, sys, os
+sys.path.<span class="fn">insert</span>(<span class="nu">0</span>, os.path.<span class="fn">join</span>(os.path.<span class="fn">dirname</span>(__file__), <span class="st">'..'</span>))
+<span class="kw">import</span> config
+
+app = Flask(__name__)
+socketio = SocketIO(app, cors_allowed_origins=<span class="st">"*"</span>, async_mode=<span class="st">'eventlet'</span>)
+
+<span class="cm"># These are set by main.py</span>
+_latest_frame = <span class="cl">None</span>
+_latest_detections = []
+
+<span class="kw">def</span> <span class="fn">update_dashboard</span>(frame, detections):
+    <span class="st">"""Called by main.py each frame to push data to dashboard."""</span>
+    <span class="kw">global</span> _latest_frame, _latest_detections
+    _latest_frame = frame
+    _latest_detections = detections
+    <span class="cm"># Encode frame as JPEG → base64 → send via Socket.IO</span>
+    _, buf = cv2.<span class="fn">imencode</span>(<span class="st">'.jpg'</span>, frame, [cv2.IMWRITE_JPEG_QUALITY, <span class="nu">70</span>])
+    b64 = base64.<span class="fn">b64encode</span>(buf).<span class="fn">decode</span>(<span class="st">'utf-8'</span>)
+    stats = {
+        <span class="st">'total'</span>: <span class="fn">len</span>(detections),
+        <span class="st">'danger'</span>: <span class="fn">sum</span>(<span class="nu">1</span> <span class="kw">for</span> d <span class="kw">in</span> detections <span class="kw">if</span> d[<span class="st">'threat'</span>]==<span class="st">'danger'</span>),
+        <span class="st">'warning'</span>: <span class="fn">sum</span>(<span class="nu">1</span> <span class="kw">for</span> d <span class="kw">in</span> detections <span class="kw">if</span> d[<span class="st">'threat'</span>]==<span class="st">'warning'</span>),
+        <span class="st">'objects'</span>: [{<span class="st">'label'</span>: d[<span class="st">'label'</span>], <span class="st">'threat'</span>: d[<span class="st">'threat'</span>],
+                     <span class="st">'conf'</span>: <span class="fn">f</span><span class="st">"{d['confidence']:.0%}"</span>} <span class="kw">for</span> d <span class="kw">in</span> detections[:<span class="nu">6</span>]],
+        <span class="st">'source'</span>: config.INPUT_MODE,
+    }
+    socketio.<span class="fn">emit</span>(<span class="st">'frame'</span>, {<span class="st">'img'</span>: b64, <span class="st">'stats'</span>: stats})
+
+@app.<span class="fn">route</span>(<span class="st">'/'</span>)
+<span class="kw">def</span> <span class="fn">index</span>():
+    <span class="kw">return</span> <span class="fn">render_template</span>(<span class="st">'index.html'</span>)
+
+<span class="kw">def</span> <span class="fn">start_dashboard</span>():
+    socketio.<span class="fn">run</span>(app, host=config.DASHBOARD_HOST, port=config.DASHBOARD_PORT, debug=<span class="cl">False</span>)</pre>
+        </div>
+      </div>
+
+      <div class="step" id="s12">
+        <div class="step-head" onclick="toggle('s12')">
+          <div class="step-checkbox" onclick="check(event,'s12')">✓</div>
+          <span class="step-id">6.2</span>
+          <span class="step-title-text">Write dashboard/templates/index.html — live UI</span>
+          <span class="step-badge b-web">HTML/JS</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="step-body">
+          <p>This page auto-receives frames and stats via Socket.IO and updates in real time — no page refresh needed.</p>
+<pre><span class="cm">&lt;!-- dashboard/templates/index.html (key JS section) --&gt;</span>
+<span class="kw">&lt;script src=</span><span class="st">"https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.0/socket.io.min.js"</span><span class="kw">&gt;&lt;/script&gt;</span>
+<span class="kw">&lt;script&gt;</span>
+  <span class="kw">const</span> socket = <span class="fn">io</span>();
+
+  socket.<span class="fn">on</span>(<span class="st">'frame'</span>, (data) =&gt; {
+    <span class="cm">// Update live video frame</span>
+    document.<span class="fn">getElementById</span>(<span class="st">'video-feed'</span>).src = <span class="st">'data:image/jpeg;base64,'</span> + data.img;
+
+    <span class="cm">// Update stats counters</span>
+    <span class="kw">const</span> s = data.stats;
+    document.<span class="fn">getElementById</span>(<span class="st">'count-total'</span>).textContent   = s.total;
+    document.<span class="fn">getElementById</span>(<span class="st">'count-danger'</span>).textContent  = s.danger;
+    document.<span class="fn">getElementById</span>(<span class="st">'count-warning'</span>).textContent = s.warning;
+
+    <span class="cm">// Update detected objects list</span>
+    <span class="kw">const</span> list = document.<span class="fn">getElementById</span>(<span class="st">'obj-list'</span>);
+    list.innerHTML = s.objects.<span class="fn">map</span>(o =&gt; <span class="st">`
+      &lt;div class="obj-item ${o.threat}"&gt;
+        &lt;strong&gt;${o.label}&lt;/strong&gt;
+        &lt;span&gt;${o.threat.toUpperCase()}&lt;/span&gt;
+        &lt;span&gt;${o.conf}&lt;/span&gt;
+      &lt;/div&gt;`</span>).<span class="fn">join</span>(<span class="st">''</span>);
+
+    <span class="cm">// Flash red border on danger</span>
+    <span class="kw">if</span> (s.danger > <span class="nu">0</span>)
+      document.body.classList.<span class="fn">add</span>(<span class="st">'danger-flash'</span>);
+    <span class="kw">else</span>
+      document.body.classList.<span class="fn">remove</span>(<span class="st">'danger-flash'</span>);
+  });
+<span class="kw">&lt;/script&gt;</span></pre>
+          <div class="tip"><strong>Access from any device on your network:</strong> Open <code>http://&lt;your-laptop-ip&gt;:5000</code> on your phone or tablet to see the live dashboard remotely.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="phase-section p6" id="p7">
+      <div class="phase-header">
+        <div class="phase-number">PHASE 07</div>
+        <div class="phase-info">
+          <h2>Integration & Testing</h2>
+          <p>Wire everything together in main.py and run end-to-end tests · Week 4–6</p>
+          <div class="phase-meta">
+            <span class="chip chip-green">Final Integration</span>
+            <span class="chip chip-blue">Testing</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="step" id="s13">
+        <div class="step-head" onclick="toggle('s13')">
+          <div class="step-checkbox" onclick="check(event,'s13')">✓</div>
+          <span class="step-id">7.1</span>
+          <span class="step-title-text">Write main.py — the complete integration loop</span>
+          <span class="step-badge b-py">PYTHON</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="step-body">
+<pre><span class="cm"># main.py</span>
+<span class="kw">import</span> cv2, threading
+<span class="kw">from</span> input_source  <span class="kw">import</span> get_source
+<span class="kw">from</span> detector      <span class="kw">import</span> ObstacleDetector
+<span class="kw">from</span> threat_engine <span class="kw">import</span> assess, draw_boxes
+<span class="kw">from</span> feedback      <span class="kw">import</span> alert
+<span class="kw">from</span> dashboard.app <span class="kw">import</span> update_dashboard, start_dashboard
+<span class="kw">import</span> config
+
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="cm"># Start Flask dashboard in background thread</span>
+    dash_thread = threading.<span class="cl">Thread</span>(target=start_dashboard, daemon=<span class="cl">True</span>)
+    dash_thread.<span class="fn">start</span>()
+    <span class="fn">print</span>(<span class="st">f"[SmartSight] Dashboard → http://localhost:{config.DASHBOARD_PORT}"</span>)
+
+    detector = ObstacleDetector()
+    cap = <span class="fn">get_source</span>()
+
+    <span class="fn">print</span>(<span class="st">"[SmartSight] Running. Press Q in the video window to quit.\n"</span>)
+    <span class="fn">print</span>(<span class="st">f"{'TIME':10} {'LEVEL':10} {'OBJECT':16} {'AREA':8} {'CONF'}"</span>)
+    <span class="fn">print</span>(<span class="st">"-" * 52</span>)
+
+    <span class="kw">while</span> <span class="cl">True</span>:
+        ret, frame = cap.<span class="fn">read</span>()
+        <span class="kw">if not</span> ret:
+            <span class="fn">print</span>(<span class="st">"[SmartSight] Stream ended."</span>)
+            <span class="kw">break</span>
+
+        <span class="cm"># Run AI detection</span>
+        detections = detector.<span class="fn">detect</span>(frame)
+
+        <span class="cm"># Classify threats</span>
+        detections = <span class="fn">assess</span>(detections)
+
+        <span class="cm"># Draw bounding boxes on frame</span>
+        annotated = <span class="fn">draw_boxes</span>(frame.copy(), detections)
+
+        <span class="cm"># Audio alert + terminal log</span>
+        <span class="fn">alert</span>(detections)
+
+        <span class="cm"># Push to web dashboard</span>
+        <span class="fn">update_dashboard</span>(annotated, detections)
+
+        <span class="cm"># Show OpenCV window</span>
+        cv2.<span class="fn">imshow</span>(<span class="st">"SmartSight — Press Q to quit"</span>, annotated)
+        <span class="kw">if</span> cv2.<span class="fn">waitKey</span>(<span class="nu">1</span>) & <span class="nu">0xFF</span> == <span class="fn">ord</span>(<span class="st">'q'</span>):
+            <span class="kw">break</span>
+
+    cap.<span class="fn">release</span>()
+    cv2.<span class="fn">destroyAllWindows</span>()
+
+<span class="kw">if</span> __name__ == <span class="st">"__main__"</span>:
+    <span class="fn">main</span>()</pre>
+          <div class="tip"><strong>To run:</strong> <code>python main.py</code> — this opens the OpenCV window AND the Flask dashboard simultaneously. Switch input modes anytime by editing <code>config.py</code>.</div>
+        </div>
+      </div>
+
+      <div class="step" id="s14">
+        <div class="step-head" onclick="toggle('s14')">
+          <div class="step-checkbox" onclick="check(event,'s14')">✓</div>
+          <span class="step-id">7.2</span>
+          <span class="step-title-text">Test each input mode separately</span>
+          <span class="step-badge b-test">TESTING</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="step-body">
+          <ul>
+            <li>Set <code>INPUT_MODE = "webcam"</code> → run main.py → sit in front of laptop camera — verify bounding box appears around you labelled "person"</li>
+            <li>Download a free pedestrian/street video from Pexels.com → set <code>INPUT_MODE = "video"</code> and VIDEO_PATH → run and verify detections on the video</li>
+            <li>Install IP Webcam app on phone → set <code>INPUT_MODE = "mobile"</code> with correct IP → run and wave objects in front of phone</li>
+            <li>For each mode: confirm boxes appear, audio speaks, terminal logs print, and dashboard updates at <code>localhost:5000</code></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step" id="s15">
+        <div class="step-head" onclick="toggle('s15')">
+          <div class="step-checkbox" onclick="check(event,'s15')">✓</div>
+          <span class="step-id">7.3</span>
+          <span class="step-title-text">Tune thresholds and verify accuracy metrics</span>
+          <span class="step-badge b-test">TESTING</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="step-body">
+          <ul>
+            <li>If too many false alerts → increase <code>CONFIDENCE</code> from 0.45 → 0.55</li>
+            <li>If real obstacles are missed → decrease <code>CONFIDENCE</code> to 0.35</li>
+            <li>If alerts repeat too fast → increase <code>ALERT_COOLDOWN</code> to 3.5 seconds</li>
+            <li>Test in different lighting: bright room, dim room, outdoor video</li>
+            <li>Record: detection rate per class, avg FPS, false positive rate — include in your project report</li>
+          </ul>
+          <div class="tip"><strong>Target metrics:</strong> Detection Accuracy &gt; 85% on test videos · Response latency (detection → alert) &lt; 500ms · FPS ≥ 10 on laptop CPU</div>
+        </div>
+      </div>
+
+      <div class="step" id="s16">
+        <div class="step-head" onclick="toggle('s16')">
+          <div class="step-checkbox" onclick="check(event,'s16')">✓</div>
+          <span class="step-id">7.4</span>
+          <span class="step-title-text">Record a demo video for submission</span>
+          <span class="step-badge b-test">DEMO</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="step-body">
+          <ul>
+            <li>Use OBS Studio (free) or Windows/Mac built-in screen recorder to record your screen</li>
+            <li>Record all 3 input modes (webcam, video, mobile) — one clip each</li>
+            <li>Show the OpenCV bounding box window, the terminal logs, AND the web dashboard side-by-side</li>
+            <li>Play audio aloud so it's audible in the recording — demonstrates TTS working</li>
+            <li>For webcam mode: walk objects toward the camera (book, bag, chair) and show the threat level change from safe → warning → danger</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const TOTAL = 16;
+  const stored = JSON.parse(localStorage.getItem('ss2_checks') || '[]');
+  const checked = new Set(stored);
+
+  function init() {
+    checked.forEach(id => {
+      const cb = document.querySelector(`#${id} .step-checkbox`);
+      if (cb) cb.classList.add('checked');
+    });
+    updateProgress();
+    document.getElementById('spTotal').textContent = TOTAL + ' steps';
+  }
+
+  function check(e, id) {
+    e.stopPropagation();
+    const cb = document.querySelector(`#${id} .step-checkbox`);
+    if (checked.has(id)) { checked.delete(id); cb.classList.remove('checked'); }
+    else { checked.add(id); cb.classList.add('checked'); }
+    localStorage.setItem('ss2_checks', JSON.stringify([...checked]));
+    updateProgress();
+  }
+
+  function toggle(id) {
+    document.getElementById(id).classList.toggle('open');
+  }
+
+  function scrollTo(id) {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('nav-' + id)?.classList.add('active');
+  }
+
+  function updateProgress() {
+    const done = checked.size;
+    const pct = Math.round(done / TOTAL * 100);
+    document.getElementById('spFill').style.width = pct + '%';
+    document.getElementById('spDone').textContent = done + ' done /';
+  }
+
+  const phases = ['p1','p2','p3','p4','p5','p6','p7'];
+  window.addEventListener('scroll', () => {
+    let current = 'p1';
+    phases.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && el.getBoundingClientRect().top < 120) current = id;
+    });
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('nav-' + current)?.classList.add('active');
+  });
+
+  init();
+</script>
+</body>
+</html>
